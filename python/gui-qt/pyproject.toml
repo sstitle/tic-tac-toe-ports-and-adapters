@@ -1,0 +1,23 @@
+[project]
+name = "tictactoe-qt"
+version = "0.1.0"
+description = "Qt GUI for tic-tac-toe (depends on core only via the GameSession port)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "core",
+  "PySide6>=6.6.0",
+]
+
+[project.scripts]
+tictactoe-qt = "tictactoe_qt.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tictactoe_qt"]
+
+[tool.uv.sources]
+core = { path = "../core" }

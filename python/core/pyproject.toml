@@ -1,7 +1,7 @@
 [project]
 name = "core"
 version = "0.1.0"
-description = "Tic-tac-toe domain (NewTypes + reducer) and Typer CLI"
+description = "Tic-tac-toe domain, ports, application service, presentation text, Typer CLI (no external adapters)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

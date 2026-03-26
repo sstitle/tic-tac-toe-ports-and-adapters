@@ -1,6 +1,16 @@
-"""Tic-tac-toe core: NewTyped domain, reducer, CLI entry in `tictactoe.cli`."""
+"""Tic-tac-toe core: domain, ports, application, presentation helpers, Typer CLI in ``tictactoe.cli``."""
 
-from tictactoe.reducer import Action, GameState, PlaceMark, ResetGame, initial_state, reduce
+from tictactoe.application import GameSession
+from tictactoe.ports import GameSessionPort
+from tictactoe.reducer import (
+    Action,
+    GameState,
+    PlaceMark,
+    ResetGame,
+    describe_outcome,
+    initial_state,
+    reduce,
+)
 from tictactoe.types import (
     Board,
     CellIndex,
@@ -24,6 +34,8 @@ __all__ = [
     "Board",
     "CellIndex",
     "ColIndex",
+    "GameSession",
+    "GameSessionPort",
     "GameState",
     "MoveCount",
     "Outcome",
@@ -35,6 +47,7 @@ __all__ = [
     "cell_from_row_col",
     "cell_index",
     "col_index",
+    "describe_outcome",
     "empty_board",
     "initial_state",
     "reduce",

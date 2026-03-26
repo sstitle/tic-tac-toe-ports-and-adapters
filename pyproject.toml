@@ -1,10 +1,16 @@
-# Workspace meta-project: lets `uv run` from the repo root resolve deps for
-# `python/core` (see https://docs.astral.sh/uv/concepts/projects/dependencies/).
+# Meta-project: `uv run` from the repo root resolves `core` and optional TUI/GUI packages.
 [project]
 name = "tic-tac-toe-ports-and-adapters"
 version = "0.0.0"
 requires-python = ">=3.11"
 dependencies = ["core"]
 
+[project.optional-dependencies]
+tui = ["tictactoe-textual"]
+qt = ["tictactoe-qt"]
+tui-qt = ["tictactoe-textual", "tictactoe-qt"]
+
 [tool.uv.sources]
 core = { path = "python/core" }
+tictactoe-textual = { path = "python/tui-textual" }
+tictactoe-qt = { path = "python/gui-qt" }
