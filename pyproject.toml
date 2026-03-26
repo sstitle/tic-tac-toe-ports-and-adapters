@@ -1,0 +1,10 @@
+# Workspace meta-project: lets `uv run` from the repo root resolve deps for
+# `python/core` (see https://docs.astral.sh/uv/concepts/projects/dependencies/).
+[project]
+name = "tic-tac-toe-ports-and-adapters"
+version = "0.0.0"
+requires-python = ">=3.11"
+dependencies = ["core"]
+
+[tool.uv.sources]
+core = { path = "python/core" }
