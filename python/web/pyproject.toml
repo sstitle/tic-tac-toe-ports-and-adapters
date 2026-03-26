@@ -1,0 +1,23 @@
+[project]
+name = "tictactoe-web"
+version = "0.1.0"
+description = "Flask HTML server for tic-tac-toe (depends on core via GameSession port)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "core",
+  "flask>=3.0.0",
+]
+
+[project.scripts]
+tictactoe-web = "tictactoe_web.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tictactoe_web"]
+
+[tool.uv.sources]
+core = { path = "../core" }

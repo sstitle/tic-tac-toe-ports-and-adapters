@@ -8,9 +8,11 @@ dependencies = ["core"]
 [project.optional-dependencies]
 tui = ["tictactoe-textual"]
 qt = ["tictactoe-qt"]
+web = ["tictactoe-web"]
 tui-qt = ["tictactoe-textual", "tictactoe-qt"]
 
 [tool.uv.sources]
 core = { path = "python/core" }
 tictactoe-textual = { path = "python/tui-textual" }
 tictactoe-qt = { path = "python/gui-qt" }
+tictactoe-web = { path = "python/web" }
