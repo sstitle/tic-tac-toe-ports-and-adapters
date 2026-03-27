@@ -1,4 +1,4 @@
-"""Typer-based terminal UI: lives in core but only talks to :class:`~tictactoe.application.GameSession` (the port implementation)."""
+"""Typer-based terminal UI: talks to :class:`~tictactoe.application.GameSession` (the port implementation)."""
 
 from __future__ import annotations
 

@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = ["core"]
 
 [project.optional-dependencies]
+cli = ["tictactoe-cli"]
 tui = ["tictactoe-textual"]
 qt = ["tictactoe-qt"]
 web = ["tictactoe-web"]
@@ -13,6 +14,7 @@ tui-qt = ["tictactoe-textual", "tictactoe-qt"]
 
 [tool.uv.sources]
 core = { path = "python/core" }
+tictactoe-cli = { path = "python/cli-typer" }
 tictactoe-textual = { path = "python/tui-textual" }
 tictactoe-qt = { path = "python/gui-qt" }
 tictactoe-web = { path = "python/web" }

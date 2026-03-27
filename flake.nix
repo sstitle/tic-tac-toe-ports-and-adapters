@@ -1,5 +1,5 @@
 {
-  description = "Development environment with nickel and mask";
+  description = "Development environment with mask and uv";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
@@ -33,20 +33,15 @@
           # Development shell with nickel and mask
           devShells.default = pkgs.mkShell {
             buildInputs = with pkgs; [
-              # Core tools
               git
-              nickel
               mask
+              uv
             ];
 
             shellHook = ''
-              echo "🚀 Development environment loaded!"
-              echo "Available tools:"
-              echo "  - nickel: Configuration language"
-              echo "  - mask: Task runner"
-              echo ""
-              echo "Run 'mask --help' to see available tasks."
-              echo "Run 'nix fmt' to format all files."
+              echo "Development environment loaded."
+              echo "  mask --help   list available tasks"
+              echo "  uv --version  uv package manager"
             '';
           };
 

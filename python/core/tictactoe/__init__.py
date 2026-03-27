@@ -1,4 +1,4 @@
-"""Tic-tac-toe core: domain, ports, application, presentation helpers, Typer CLI in ``tictactoe.cli``."""
+"""Tic-tac-toe core: domain, ports, application service, and presentation helpers."""
 
 from tictactoe.application import GameSession
 from tictactoe.ports import GameSessionPort

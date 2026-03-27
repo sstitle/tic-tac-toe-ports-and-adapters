@@ -5,16 +5,18 @@ from __future__ import annotations
 import os
 import secrets
 import threading
+import time
 from typing import Final
 
 from flask import Flask, flash, redirect, render_template_string, request, session, url_for
 
 from tictactoe.application import GameSession
-from tictactoe.presentation import header_line
+from tictactoe.presentation import empty_cell_glyph, header_line
 from tictactoe.types import Outcome, cell_index
 
 _LOCK = threading.Lock()
-_GAMES: dict[str, GameSession] = {}
+_GAMES: dict[str, tuple[GameSession, float]] = {}
+_SESSION_TTL: Final[float] = 12 * 3600  # 12 hours
 
 _PAGE: Final[str] = """<!DOCTYPE html>
 <html lang="en">
@@ -69,21 +71,30 @@ def _browser_id() -> str:
     return sid
 
 
+def _evict_stale(now: float) -> None:
+    stale = [k for k, (_, t) in _GAMES.items() if now - t > _SESSION_TTL]
+    for k in stale:
+        del _GAMES[k]
+
+
 def _game() -> GameSession:
     bid = _browser_id()
+    now = time.time()
     with _LOCK:
-        if bid not in _GAMES:
-            _GAMES[bid] = GameSession()
-        return _GAMES[bid]
+        _evict_stale(now)
+        entry = _GAMES.get(bid)
+        gs = entry[0] if entry is not None else GameSession()
+        _GAMES[bid] = (gs, now)
+    return gs
 
 
 def _cell_labels_and_disabled(st) -> tuple[list[str], list[bool]]:
     labels: list[str] = []
     disabled: list[bool] = []
+    fin = st.outcome is not Outcome.IN_PROGRESS
     for i in range(9):
         mark = st.board[i]
-        labels.append(mark.value if mark is not None else "·")
-        fin = st.outcome is not Outcome.IN_PROGRESS
+        labels.append(mark.value if mark is not None else empty_cell_glyph())
         disabled.append(fin or mark is not None)
     return labels, disabled
 

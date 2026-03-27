@@ -26,10 +26,7 @@ class GameSession:
                 "That cell is already occupied. Choose an empty cell "
                 "(shown as · in text UIs)."
             )
-        prev = self._state
         self._state = reduce(self._state, PlaceMark(cell=cell))
-        if self._state.board == prev.board and self._state.outcome == prev.outcome:
-            return "That move could not be applied."
         return None
 
     def reset(self) -> None:
