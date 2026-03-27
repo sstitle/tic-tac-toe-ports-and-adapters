@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from tictactoe.reducer import GameState, PlaceMark, reduce
 from tictactoe.types import CellIndex, Outcome, Player, cell_index
 
 
-def _minimax(state: GameState, depth: int) -> int:
-    """Score the position from X's perspective (positive = good for X)."""
+@lru_cache(maxsize=None)
+def _minimax(state: GameState) -> int:
+    """Score the position from X's perspective (positive = good for X).
+
+    Uses remaining empty cells as a proxy for depth so the result is
+    state-intrinsic and can be safely cached across transpositions.
+    Faster wins score higher; faster losses score lower.
+    """
+    empty = sum(1 for c in state.board if c is None)
     if state.outcome is Outcome.WIN_X:
-        return 10 - depth
+        return empty + 1
     if state.outcome is Outcome.WIN_O:
-        return depth - 10
+        return -(empty + 1)
     if state.outcome is Outcome.DRAW:
         return 0
 
@@ -20,7 +29,7 @@ def _minimax(state: GameState, depth: int) -> int:
     for i in range(9):
         if state.board[i] is None:
             child = reduce(state, PlaceMark(cell=cell_index(i)))
-            score = _minimax(child, depth + 1)
+            score = _minimax(child)
             if maximizing:
                 best = max(best, score)
             else:
@@ -38,7 +47,7 @@ def best_move(state: GameState) -> CellIndex | None:
     for i in range(9):
         if state.board[i] is None:
             child = reduce(state, PlaceMark(cell=cell_index(i)))
-            score = _minimax(child, 0)
+            score = _minimax(child)
             if best is None:
                 best = (score, cell_index(i))
             elif maximizing and score > best[0]:

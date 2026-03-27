@@ -14,8 +14,8 @@
     .actions { margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center; }
     .actions button { font-size: 1rem; padding: 0.35rem 0.75rem; cursor: pointer; }
     .ai-badge { font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 0.25rem;
-                background: {% if vs_computer %}#166534{% else %}#374151{% endif %};
-                color: #fff; }
+                background: #374151; color: #fff; }
+    .ai-badge.on { background: #166534; }
     .hint { font-size: 0.85rem; color: #444; margin-top: 1.5rem; }
   </style>
 </head>
@@ -42,7 +42,7 @@
       <button type="submit">New game</button>
     </form>
     <form method="post" action="{{ url_for('toggle_ai') }}">
-      <button type="submit" class="ai-badge">
+      <button type="submit" class="ai-badge{% if vs_computer %} on{% endif %}">
         AI: {% if vs_computer %}ON{% else %}OFF{% endif %}
       </button>
     </form>
