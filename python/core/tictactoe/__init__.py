@@ -1,6 +1,8 @@
 """Tic-tac-toe core: domain, ports, application service, and presentation helpers."""
 
 from tictactoe.application import GameSession
+from tictactoe.errors import CellOccupiedError, GameError, GameOverError
+from tictactoe.minimax import best_move
 from tictactoe.ports import GameSessionPort
 from tictactoe.reducer import (
     Action,
@@ -33,7 +35,10 @@ __all__ = [
     "Action",
     "Board",
     "CellIndex",
+    "CellOccupiedError",
     "ColIndex",
+    "GameError",
+    "GameOverError",
     "GameSession",
     "GameSessionPort",
     "GameState",
@@ -44,6 +49,7 @@ __all__ = [
     "ResetGame",
     "RowIndex",
     "WinLineIndex",
+    "best_move",
     "cell_from_row_col",
     "cell_index",
     "col_index",

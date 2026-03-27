@@ -5,15 +5,21 @@ from __future__ import annotations
 import typer
 
 from tictactoe.application import GameSession
+from tictactoe.errors import GameError
+from tictactoe.minimax import best_move
+from tictactoe.presentation import board_text, header_line, intro_line
 from tictactoe.reducer import describe_outcome
 from tictactoe.types import Outcome, cell_index
-from tictactoe.presentation import board_text, header_line, intro_line
 
 app = typer.Typer(help="Tic-tac-toe: ports & application + Typer CLI.")
 
 
 @app.command()
-def play() -> None:
+def play(
+    vs_computer: bool = typer.Option(
+        False, "--vs-computer", "-c", help="Play against the minimax AI (you are X)."
+    ),
+) -> None:
     """Play an interactive game (cells 1–9, q to quit, r to reset)."""
     session = GameSession()
     typer.echo(header_line(session.state))
@@ -64,13 +70,24 @@ def play() -> None:
                 "Numbers map to the board left→right, top→bottom."
             )
             continue
+        # UI cells are 1-9; internal indices are 0-8.
         idx = cell_index(n - 1)
-        err = session.place(idx)
-        if err is not None:
-            typer.echo(err)
+        try:
+            session.place(idx)
+        except GameError as exc:
+            typer.echo(str(exc))
             continue
         typer.echo(header_line(session.state))
         typer.echo(board_text(session.state))
+
+        # AI response (plays as the next player, optimally).
+        if vs_computer and session.state.outcome is Outcome.IN_PROGRESS:
+            ai_cell = best_move(session.state)
+            if ai_cell is not None:
+                session.place(ai_cell)
+                typer.echo(f"AI plays: {int(ai_cell) + 1}")
+                typer.echo(header_line(session.state))
+                typer.echo(board_text(session.state))
 
 
 def main() -> None:

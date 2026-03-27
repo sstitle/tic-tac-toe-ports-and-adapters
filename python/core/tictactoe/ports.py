@@ -23,8 +23,13 @@ class GameSessionPort(Protocol):
         """Current immutable snapshot (same object identity may update between moves)."""
         ...
 
-    def place(self, cell: CellIndex) -> str | None:
-        """Apply a move for the current player. Returns an error message or ``None`` on success."""
+    def place(self, cell: CellIndex) -> None:
+        """Apply a move for the current player.
+
+        Raises:
+            CellOccupiedError: if the target cell is already taken.
+            GameOverError: if the game has already ended.
+        """
         ...
 
     def reset(self) -> None:

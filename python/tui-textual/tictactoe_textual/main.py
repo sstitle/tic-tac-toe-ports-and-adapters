@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import sys
+
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
 from tictactoe.application import GameSession
+from tictactoe.errors import GameError
+from tictactoe.minimax import best_move
 from tictactoe.presentation import header_line
-from tictactoe.types import cell_index
+from tictactoe.types import Outcome, cell_index
 
 
 class TicTacToeTui(App[None]):
@@ -17,9 +21,10 @@ class TicTacToeTui(App[None]):
 
     BINDINGS = [("q", "quit", "Quit")]
 
-    def __init__(self) -> None:
+    def __init__(self, vs_computer: bool = False) -> None:
         super().__init__()
         self.session = GameSession()
+        self.vs_computer = vs_computer
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -55,14 +60,22 @@ class TicTacToeTui(App[None]):
             return
         if bid.startswith("c") and bid[1:].isdigit():
             i = int(bid[1:])
-            err = self.session.place(cell_index(i))
-            if err:
-                self.notify(err, severity="error")
+            try:
+                self.session.place(cell_index(i))
+            except GameError as exc:
+                self.notify(str(exc), severity="error")
+                return
+            # AI response after a valid human move.
+            if self.vs_computer and self.session.state.outcome is Outcome.IN_PROGRESS:
+                ai_cell = best_move(self.session.state)
+                if ai_cell is not None:
+                    self.session.place(ai_cell)
             self.refresh_ui()
 
 
 def main() -> None:
-    TicTacToeTui().run()
+    vs_computer = "--vs-computer" in sys.argv
+    TicTacToeTui(vs_computer=vs_computer).run()
 
 
 if __name__ == "__main__":

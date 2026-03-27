@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tic-tac-toe</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.1rem; font-weight: 600; }
+    .flash { color: #b45309; margin: 0.75rem 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(4rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .grid button { min-height: 3.5rem; font-size: 1.35rem; cursor: pointer; }
+    .grid button:disabled { cursor: not-allowed; opacity: 0.75; }
+    .actions { margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center; }
+    .actions button { font-size: 1rem; padding: 0.35rem 0.75rem; cursor: pointer; }
+    .ai-badge { font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 0.25rem;
+                background: {% if vs_computer %}#166534{% else %}#374151{% endif %};
+                color: #fff; }
+    .hint { font-size: 0.85rem; color: #444; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>{{ status }}</h1>
+  {% for msg in get_flashed_messages() %}
+  <p class="flash">{{ msg }}</p>
+  {% endfor %}
+  <form method="post" action="{{ url_for('move') }}">
+    <div class="grid">
+      {% for i in range(9) %}
+      <button
+        type="submit"
+        name="cell"
+        value="{{ i }}"
+        {% if cell_disabled[i] %}disabled{% endif %}
+        aria-label="Cell {{ i + 1 }}"
+      >{{ cell_label[i] }}</button>
+      {% endfor %}
+    </div>
+  </form>
+  <div class="actions">
+    <form method="post" action="{{ url_for('new_game') }}">
+      <button type="submit">New game</button>
+    </form>
+    <form method="post" action="{{ url_for('toggle_ai') }}">
+      <button type="submit" class="ai-badge">
+        AI: {% if vs_computer %}ON{% else %}OFF{% endif %}
+      </button>
+    </form>
+  </div>
+  <p class="hint">Empty squares show ·. Cells are numbered 1–9 left to right, top to bottom.
+    {% if vs_computer %}You play X; the computer plays O.{% endif %}
+  </p>
+</body>
+</html>

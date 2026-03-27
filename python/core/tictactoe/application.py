@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from tictactoe.errors import CellOccupiedError, GameOverError
 from tictactoe.reducer import GameState, PlaceMark, ResetGame, initial_state, reduce
 from tictactoe.types import CellIndex, Outcome
 
@@ -18,16 +19,12 @@ class GameSession:
     def state(self) -> GameState:
         return self._state
 
-    def place(self, cell: CellIndex) -> str | None:
+    def place(self, cell: CellIndex) -> None:
         if self._state.outcome is not Outcome.IN_PROGRESS:
-            return "The game is already finished. Start a new game or reset."
+            raise GameOverError(self._state.outcome)
         if self._state.board[int(cell)] is not None:
-            return (
-                "That cell is already occupied. Choose an empty cell "
-                "(shown as · in text UIs)."
-            )
+            raise CellOccupiedError(cell)
         self._state = reduce(self._state, PlaceMark(cell=cell))
-        return None
 
     def reset(self) -> None:
         self._state = reduce(self._state, ResetGame())

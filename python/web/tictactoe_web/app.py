@@ -6,61 +6,29 @@ import os
 import secrets
 import threading
 import time
+from dataclasses import dataclass, field
 from typing import Final
 
-from flask import Flask, flash, g, redirect, render_template_string, request, session, url_for
+from flask import Flask, flash, g, redirect, render_template, request, session, url_for
 
 from tictactoe.application import GameSession
+from tictactoe.errors import GameError
+from tictactoe.minimax import best_move
 from tictactoe.presentation import empty_cell_glyph, header_line
 from tictactoe.types import Outcome, cell_index
 
 _LOCK = threading.Lock()
-_GAMES: dict[str, tuple[GameSession, float]] = {}
 _SESSION_TTL: Final[float] = 12 * 3600  # 12 hours
 
-_PAGE: Final[str] = """<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tic-tac-toe</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 0 1rem; }
-    h1 { font-size: 1.1rem; font-weight: 600; }
-    .flash { color: #b45309; margin: 0.75rem 0; }
-    .grid { display: grid; grid-template-columns: repeat(3, minmax(4rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
-    .grid button { min-height: 3.5rem; font-size: 1.35rem; cursor: pointer; }
-    .grid button:disabled { cursor: not-allowed; opacity: 0.75; }
-    .actions { margin-top: 1rem; }
-    .actions button { font-size: 1rem; padding: 0.35rem 0.75rem; cursor: pointer; }
-    .hint { font-size: 0.85rem; color: #444; margin-top: 1.5rem; }
-  </style>
-</head>
-<body>
-  <h1>{{ status }}</h1>
-  {% for msg in get_flashed_messages() %}
-  <p class="flash">{{ msg }}</p>
-  {% endfor %}
-  <form method="post" action="{{ url_for('move') }}">
-    <div class="grid">
-      {% for i in range(9) %}
-      <button
-        type="submit"
-        name="cell"
-        value="{{ i }}"
-        {% if cell_disabled[i] %}disabled{% endif %}
-        aria-label="Cell {{ i + 1 }}"
-      >{{ cell_label[i] }}</button>
-      {% endfor %}
-    </div>
-  </form>
-  <form class="actions" method="post" action="{{ url_for('reset') }}">
-    <button type="submit">New game</button>
-  </form>
-  <p class="hint">Empty squares show ·. Cells are numbered 1–9 left to right, top to bottom.</p>
-</body>
-</html>
-"""
+
+@dataclass
+class _WebGame:
+    session: GameSession = field(default_factory=GameSession)
+    last_active: float = field(default_factory=time.time)
+    vs_computer: bool = False
+
+
+_GAMES: dict[str, _WebGame] = {}
 
 
 def _browser_id() -> str:
@@ -72,23 +40,26 @@ def _browser_id() -> str:
 
 
 def _evict_stale(now: float) -> None:
-    stale = [k for k, (_, t) in _GAMES.items() if now - t > _SESSION_TTL]
+    stale = [k for k, wg in _GAMES.items() if now - wg.last_active > _SESSION_TTL]
     for k in stale:
         del _GAMES[k]
 
 
-def _game() -> GameSession:
-    gs: GameSession | None = getattr(g, "_game_session", None)
-    if gs is None:
+def _web_game() -> _WebGame:
+    wg: _WebGame | None = getattr(g, "_web_game", None)
+    if wg is None:
         bid = _browser_id()
         now = time.time()
         with _LOCK:
             _evict_stale(now)
-            entry = _GAMES.get(bid)
-            gs = entry[0] if entry is not None else GameSession()
-            _GAMES[bid] = (gs, now)
-        g._game_session = gs  # type: ignore[attr-defined]
-    return gs
+            wg = _GAMES.get(bid)
+            if wg is None:
+                wg = _WebGame()
+                _GAMES[bid] = wg
+            else:
+                wg.last_active = now
+        g._web_game = wg  # type: ignore[attr-defined]
+    return wg
 
 
 def _cell_labels_and_disabled(st) -> tuple[list[str], list[bool]]:
@@ -108,14 +79,15 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index() -> str:
-        g = _game()
-        st = g.state
+        wg = _web_game()
+        st = wg.session.state
         labels, cell_disabled = _cell_labels_and_disabled(st)
-        return render_template_string(
-            _PAGE,
+        return render_template(
+            "board.html",
             status=header_line(st),
             cell_label=labels,
             cell_disabled=cell_disabled,
+            vs_computer=wg.vs_computer,
         )
 
     @app.post("/move")
@@ -134,14 +106,28 @@ def create_app() -> Flask:
         except ValueError as e:
             flash(str(e))
             return redirect(url_for("index"))
-        err = _game().place(idx)
-        if err is not None:
-            flash(err)
+        wg = _web_game()
+        try:
+            wg.session.place(idx)
+        except GameError as exc:
+            flash(str(exc))
+            return redirect(url_for("index"))
+        # AI response after a valid human move.
+        if wg.vs_computer and wg.session.state.outcome is Outcome.IN_PROGRESS:
+            ai_cell = best_move(wg.session.state)
+            if ai_cell is not None:
+                wg.session.place(ai_cell)
         return redirect(url_for("index"))
 
     @app.post("/reset")
-    def reset() -> str:
-        _game().reset()
+    def new_game() -> str:
+        _web_game().session.reset()
+        return redirect(url_for("index"))
+
+    @app.post("/toggle-ai")
+    def toggle_ai() -> str:
+        wg = _web_game()
+        wg.vs_computer = not wg.vs_computer
         return redirect(url_for("index"))
 
     return app
