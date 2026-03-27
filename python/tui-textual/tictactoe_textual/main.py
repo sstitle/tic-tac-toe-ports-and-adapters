@@ -12,15 +12,29 @@ from textual.widgets import Button, Footer, Header, Static
 from tictactoe.application import GameSession
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
-from tictactoe.presentation import header_line
-from tictactoe.reducer import GameError
-from tictactoe.types import cell_index
+from tictactoe.reducer import GameError, describe_outcome
+from tictactoe.types import Player, cell_index
+
+_EMPTY = "·"
+
+
+def _status_markup(state) -> str:
+    oc = describe_outcome(state)
+    if oc:
+        return f"[bold green]{oc}[/bold green]"
+    color = "cyan" if state.current_player is Player.X else "magenta"
+    return f"Turn: [bold {color}]{state.current_player.value}[/bold {color}]"
 
 
 class TicTacToeTui(App[None]):
     """Board grid + status; uses :class:`~tictactoe.application.GameSession` only."""
 
     BINDINGS = [("q", "quit", "Quit")]
+    CSS = """
+    #status { padding: 0 1; }
+    .x-cell { color: cyan; text-style: bold; }
+    .o-cell { color: magenta; text-style: bold; }
+    """
 
     def __init__(self, vs_computer: bool = False) -> None:
         super().__init__()
@@ -35,7 +49,7 @@ class TicTacToeTui(App[None]):
                 with Horizontal():
                     for c in range(3):
                         i = r * 3 + c
-                        yield Button("·", id=f"c{i}")
+                        yield Button(_EMPTY, id=f"c{i}")
         yield Button("New game", id="reset", variant="warning")
         yield Footer()
 
@@ -46,11 +60,13 @@ class TicTacToeTui(App[None]):
         self.exit()
 
     def refresh_ui(self) -> None:
-        self.query_one("#status", Static).update(header_line(self.session.state))
+        self.query_one("#status", Static).update(_status_markup(self.session.state))
         for i in range(9):
             btn = self.query_one(f"#c{i}", Button)
             cell = self.session.state.board[i]
-            btn.label = cell.value if cell else "·"
+            btn.label = cell.value if cell else _EMPTY
+            btn.set_class(cell is Player.X, "x-cell")
+            btn.set_class(cell is Player.O, "o-cell")
 
     @on(Button.Pressed)
     def handle_button(self, event: Button.Pressed) -> None:

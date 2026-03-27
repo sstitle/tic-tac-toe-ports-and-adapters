@@ -14,12 +14,12 @@ from flask import Flask, flash, g, redirect, render_template, request, session, 
 from tictactoe.application import GameSession
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
-from tictactoe.presentation import empty_cell_glyph, header_line
-from tictactoe.reducer import GameError
+from tictactoe.reducer import GameError, describe_outcome
 from tictactoe.types import Outcome, cell_index
 
 _LOCK = threading.Lock()
 _SESSION_TTL: Final[float] = 12 * 3600  # 12 hours
+_EMPTY = "·"
 
 
 @dataclass
@@ -63,15 +63,22 @@ def _web_game() -> _WebGame:
     return wg
 
 
-def _cell_labels_and_disabled(st) -> tuple[list[str], list[bool]]:
+def _status_text(st) -> str:
+    oc = describe_outcome(st)
+    return oc if oc else f"Turn: {st.current_player.value}"
+
+
+def _cell_labels_disabled_players(st) -> tuple[list[str], list[bool], list[str]]:
     labels: list[str] = []
     disabled: list[bool] = []
+    players: list[str] = []
     fin = st.outcome is not Outcome.IN_PROGRESS
     for i in range(9):
         mark = st.board[i]
-        labels.append(mark.value if mark is not None else empty_cell_glyph())
+        labels.append(mark.value if mark is not None else _EMPTY)
         disabled.append(fin or mark is not None)
-    return labels, disabled
+        players.append(mark.value if mark is not None else "")
+    return labels, disabled, players
 
 
 def create_app() -> Flask:
@@ -82,12 +89,14 @@ def create_app() -> Flask:
     def index() -> str:
         wg = _web_game()
         st = wg.session.state
-        labels, cell_disabled = _cell_labels_and_disabled(st)
+        labels, cell_disabled, cell_player = _cell_labels_disabled_players(st)
         return render_template(
             "board.html",
-            status=header_line(st),
+            status=_status_text(st),
+            status_player=st.current_player.value if st.outcome is Outcome.IN_PROGRESS else "",
             cell_label=labels,
             cell_disabled=cell_disabled,
+            cell_player=cell_player,
             vs_computer=wg.strategy is not None,
         )
 

@@ -10,7 +10,10 @@ source = { directory = "../core" }
 [package.metadata]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.0.2" }]
+dev = [
+    { name = "hypothesis", specifier = ">=6.0" },
+    { name = "pytest", specifier = ">=9.0.2" },
+]
 
 [[package]]
 name = "pyside6"

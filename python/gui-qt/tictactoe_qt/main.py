@@ -18,9 +18,20 @@ from PySide6.QtWidgets import (
 from tictactoe.application import GameSession
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
-from tictactoe.presentation import header_line
-from tictactoe.reducer import GameError
-from tictactoe.types import cell_index
+from tictactoe.reducer import GameError, describe_outcome
+from tictactoe.types import Player, cell_index
+
+_EMPTY = "·"
+_X_COLOR = "#0891b2"
+_O_COLOR = "#c026d3"
+
+
+def _status_html(state) -> str:
+    oc = describe_outcome(state)
+    if oc:
+        return f"<b style='color: #16a34a'>{oc}</b>"
+    color = _X_COLOR if state.current_player is Player.X else _O_COLOR
+    return f"Turn: <b style='color: {color}'>{state.current_player.value}</b>"
 
 
 class BoardWidget(QWidget):
@@ -51,10 +62,20 @@ class BoardWidget(QWidget):
         self._refresh()
 
     def _refresh(self) -> None:
-        self._status.setText(header_line(self.session.state))
+        self._status.setText(_status_html(self.session.state))
         for i, btn in enumerate(self._buttons):
             cell = self.session.state.board[i]
-            btn.setText(cell.value if cell else "·")
+            btn.setText(cell.value if cell else _EMPTY)
+            if cell is Player.X:
+                btn.setStyleSheet(
+                    f"color: {_X_COLOR}; font-weight: bold; font-size: 20px;"
+                )
+            elif cell is Player.O:
+                btn.setStyleSheet(
+                    f"color: {_O_COLOR}; font-weight: bold; font-size: 20px;"
+                )
+            else:
+                btn.setStyleSheet("font-size: 20px;")
 
     def _on_ai_toggled(self, checked: bool) -> None:
         self.strategy = MinimaxStrategy() if checked else None

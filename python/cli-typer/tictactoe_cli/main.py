@@ -7,11 +7,45 @@ import typer
 from tictactoe.application import GameSession
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
-from tictactoe.presentation import board_text, header_line, intro_line
 from tictactoe.reducer import GameError, describe_outcome
-from tictactoe.types import cell_index
+from tictactoe.types import Player, cell_index
 
 app = typer.Typer(help="Tic-tac-toe: ports & application + Typer CLI.")
+
+_EMPTY = "·"
+_SEP = typer.style("---+---+---", fg=typer.colors.BRIGHT_BLACK)
+
+
+def _mark(player: Player) -> str:
+    if player is Player.X:
+        return typer.style("X", fg=typer.colors.CYAN, bold=True)
+    return typer.style("O", fg=typer.colors.MAGENTA, bold=True)
+
+
+def _header(state) -> str:
+    oc = describe_outcome(state)
+    if oc:
+        return typer.style(oc, fg=typer.colors.GREEN, bold=True)
+    color = typer.colors.CYAN if state.current_player is Player.X else typer.colors.MAGENTA
+    return "Turn: " + typer.style(state.current_player.value, fg=color, bold=True)
+
+
+def _board_text(state) -> str:
+    b = state.board
+    lines: list[str] = []
+    for r in range(3):
+        cells = []
+        for c in range(3):
+            mark = b[r * 3 + c]
+            cells.append(_mark(mark) if mark is not None else _EMPTY)
+        lines.append(" " + " | ".join(cells) + " ")
+        if r < 2:
+            lines.append(_SEP)
+    return "\n".join(lines)
+
+
+def _intro() -> str:
+    return f"Positions 1–9 are left→right, top→bottom (empty cells show as {_EMPTY})."
 
 
 @app.command()
@@ -23,9 +57,9 @@ def play(
     """Play an interactive game (cells 1–9, q to quit, r to reset)."""
     strategy: MoveStrategyPort | None = MinimaxStrategy() if vs_computer else None
     session = GameSession()
-    typer.echo(header_line(session.state))
-    typer.echo(intro_line())
-    typer.echo(board_text(session.state))
+    typer.echo(_header(session.state))
+    typer.echo(_intro())
+    typer.echo(_board_text(session.state))
     while True:
         state = session.state
         if session.is_over:
@@ -36,8 +70,8 @@ def play(
             if not again:
                 raise typer.Exit(0)
             session.reset()
-            typer.echo(header_line(session.state))
-            typer.echo(board_text(session.state))
+            typer.echo(_header(session.state))
+            typer.echo(_board_text(session.state))
             continue
 
         raw = typer.prompt(
@@ -50,8 +84,8 @@ def play(
             raise typer.Exit(0)
         if lowered == "r":
             session.reset()
-            typer.echo(header_line(session.state))
-            typer.echo(board_text(session.state))
+            typer.echo(_header(session.state))
+            typer.echo(_board_text(session.state))
             continue
         if raw == "":
             typer.echo(
@@ -78,8 +112,8 @@ def play(
         except GameError as exc:
             typer.echo(str(exc))
             continue
-        typer.echo(header_line(session.state))
-        typer.echo(board_text(session.state))
+        typer.echo(_header(session.state))
+        typer.echo(_board_text(session.state))
 
         # AI response (plays as the next player, optimally).
         if strategy is not None and not session.is_over:
@@ -87,8 +121,8 @@ def play(
             if ai_cell is not None:
                 session.place(ai_cell)
                 typer.echo(f"AI plays: {int(ai_cell) + 1}")
-                typer.echo(header_line(session.state))
-                typer.echo(board_text(session.state))
+                typer.echo(_header(session.state))
+                typer.echo(_board_text(session.state))
 
 
 def main() -> None:
