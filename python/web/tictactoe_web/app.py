@@ -13,7 +13,8 @@ from flask import Flask, flash, g, redirect, render_template, request, session, 
 
 from tictactoe.application import GameSession
 from tictactoe.errors import GameError
-from tictactoe.minimax import best_move
+from tictactoe.minimax import MinimaxStrategy
+from tictactoe.ports import MoveStrategyPort
 from tictactoe.presentation import empty_cell_glyph, header_line
 from tictactoe.types import Outcome, cell_index
 
@@ -25,7 +26,7 @@ _SESSION_TTL: Final[float] = 12 * 3600  # 12 hours
 class _WebGame:
     session: GameSession = field(default_factory=GameSession)
     last_active: float = field(default_factory=time.time)
-    vs_computer: bool = False
+    strategy: MoveStrategyPort | None = None
 
 
 _GAMES: dict[str, _WebGame] = {}
@@ -87,7 +88,7 @@ def create_app() -> Flask:
             status=header_line(st),
             cell_label=labels,
             cell_disabled=cell_disabled,
-            vs_computer=wg.vs_computer,
+            vs_computer=wg.strategy is not None,
         )
 
     @app.post("/move")
@@ -113,8 +114,8 @@ def create_app() -> Flask:
             flash(str(exc))
             return redirect(url_for("index"))
         # AI response after a valid human move.
-        if wg.vs_computer and wg.session.state.outcome is Outcome.IN_PROGRESS:
-            ai_cell = best_move(wg.session.state)
+        if wg.strategy is not None and wg.session.state.outcome is Outcome.IN_PROGRESS:
+            ai_cell = wg.strategy.choose_move(wg.session.state)
             if ai_cell is not None:
                 wg.session.place(ai_cell)
         return redirect(url_for("index"))
@@ -127,7 +128,7 @@ def create_app() -> Flask:
     @app.post("/toggle-ai")
     def toggle_ai() -> str:
         wg = _web_game()
-        wg.vs_computer = not wg.vs_computer
+        wg.strategy = None if wg.strategy is not None else MinimaxStrategy()
         return redirect(url_for("index"))
 
     return app

@@ -17,7 +17,8 @@ from PySide6.QtWidgets import (
 
 from tictactoe.application import GameSession
 from tictactoe.errors import GameError
-from tictactoe.minimax import best_move
+from tictactoe.minimax import MinimaxStrategy
+from tictactoe.ports import MoveStrategyPort
 from tictactoe.presentation import header_line
 from tictactoe.types import Outcome, cell_index
 
@@ -26,7 +27,7 @@ class BoardWidget(QWidget):
     def __init__(self, vs_computer: bool = False) -> None:
         super().__init__()
         self.session = GameSession()
-        self.vs_computer = vs_computer
+        self.strategy: MoveStrategyPort | None = MinimaxStrategy() if vs_computer else None
         self._status = QLabel()
         self._buttons: list[QPushButton] = []
         grid = QGridLayout()
@@ -56,7 +57,7 @@ class BoardWidget(QWidget):
             btn.setText(cell.value if cell else "·")
 
     def _on_ai_toggled(self, checked: bool) -> None:
-        self.vs_computer = checked
+        self.strategy = MinimaxStrategy() if checked else None
 
     def _on_cell(self, i: int) -> None:
         try:
@@ -65,8 +66,8 @@ class BoardWidget(QWidget):
             QMessageBox.warning(self, "Invalid move", str(exc))
             return
         # AI response after a valid human move.
-        if self.vs_computer and self.session.state.outcome is Outcome.IN_PROGRESS:
-            ai_cell = best_move(self.session.state)
+        if self.strategy is not None and self.session.state.outcome is Outcome.IN_PROGRESS:
+            ai_cell = self.strategy.choose_move(self.session.state)
             if ai_cell is not None:
                 self.session.place(ai_cell)
         self._refresh()

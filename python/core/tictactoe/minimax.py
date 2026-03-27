@@ -37,6 +37,13 @@ def _minimax(state: GameState) -> int:
     return best
 
 
+class MinimaxStrategy:
+    """``MoveStrategyPort`` implementation backed by the minimax solver."""
+
+    def choose_move(self, state: GameState) -> CellIndex | None:
+        return best_move(state)
+
+
 def best_move(state: GameState) -> CellIndex | None:
     """Return the optimal cell for the current player, or None if the game is over."""
     if state.outcome is not Outcome.IN_PROGRESS:

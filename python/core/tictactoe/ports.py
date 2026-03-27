@@ -1,10 +1,14 @@
-"""Primary ports: contracts that outer drivers (CLI in core, separate TUI/GUI packages) implement against.
+"""Ports: contracts that outer drivers and driven adapters implement against.
 
 The **domain** (`types`, `reducer`) stays free of I/O and UI frameworks.
 
 The **application** (`GameSession`) implements the use case and is exposed here as
 `GameSessionPort` so any shell can depend on a stable interface. Separate packages
 may provide Textual or Qt front-ends that call this port and render ``GameState``.
+
+`MoveStrategyPort` is a driven port: the application drives it to obtain the next
+move. Adapters wire a concrete strategy (e.g. ``MinimaxStrategy``) or pass ``None``
+for human-only play.
 """
 
 from __future__ import annotations
@@ -34,4 +38,14 @@ class GameSessionPort(Protocol):
 
     def reset(self) -> None:
         """Start a fresh game (same as domain ``ResetGame``)."""
+        ...
+
+
+class MoveStrategyPort(Protocol):
+    """Driven port: given the current game state, choose the next move.
+
+    Returns ``None`` if no move is available (terminal state).
+    """
+
+    def choose_move(self, state: GameState) -> CellIndex | None:
         ...

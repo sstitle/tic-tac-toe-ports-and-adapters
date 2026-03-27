@@ -6,7 +6,8 @@ import typer
 
 from tictactoe.application import GameSession
 from tictactoe.errors import GameError
-from tictactoe.minimax import best_move
+from tictactoe.minimax import MinimaxStrategy
+from tictactoe.ports import MoveStrategyPort
 from tictactoe.presentation import board_text, header_line, intro_line
 from tictactoe.reducer import describe_outcome
 from tictactoe.types import Outcome, cell_index
@@ -21,6 +22,7 @@ def play(
     ),
 ) -> None:
     """Play an interactive game (cells 1–9, q to quit, r to reset)."""
+    strategy: MoveStrategyPort | None = MinimaxStrategy() if vs_computer else None
     session = GameSession()
     typer.echo(header_line(session.state))
     typer.echo(intro_line())
@@ -81,8 +83,8 @@ def play(
         typer.echo(board_text(session.state))
 
         # AI response (plays as the next player, optimally).
-        if vs_computer and session.state.outcome is Outcome.IN_PROGRESS:
-            ai_cell = best_move(session.state)
+        if strategy is not None and session.state.outcome is Outcome.IN_PROGRESS:
+            ai_cell = strategy.choose_move(session.state)
             if ai_cell is not None:
                 session.place(ai_cell)
                 typer.echo(f"AI plays: {int(ai_cell) + 1}")

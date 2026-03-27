@@ -3,3 +3,4 @@ result*
 scratchpad.md
 .venv/
 __pycache__/
+.hypothesis/

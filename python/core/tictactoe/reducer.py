@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tictactoe.errors import CellOccupiedError
 from tictactoe.types import (
     Board,
     CellIndex,
@@ -77,6 +78,8 @@ def reduce(state: GameState, action: Action) -> GameState:
         case ResetGame():
             return initial_state()
         case PlaceMark(cell=idx):
+            if state.board[int(idx)] is not None:
+                raise CellOccupiedError(idx)
             b = state.board
             cells = list(b)
             p = state.current_player

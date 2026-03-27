@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from tictactoe.errors import CellOccupiedError
 from tictactoe.reducer import (
     GameState,
     PlaceMark,
@@ -57,12 +58,11 @@ class TestPlaceMark:
         assert play(0).move_count == 1
         assert play(0, 1).move_count == 2
 
-    def test_occupied_cell_overwritten_by_reducer(self) -> None:
-        # The reducer no longer guards against occupied cells — that's GameSession's job.
-        # Placing on an occupied cell simply overwrites it.
+    def test_occupied_cell_raises(self) -> None:
         state = play(0)
-        state2 = place(state, 0)
-        assert state2 is not state
+        with pytest.raises(CellOccupiedError) as exc_info:
+            place(state, 0)
+        assert exc_info.value.cell == cell_index(0)
 
     def test_state_is_immutable(self) -> None:
         s1 = initial_state()
