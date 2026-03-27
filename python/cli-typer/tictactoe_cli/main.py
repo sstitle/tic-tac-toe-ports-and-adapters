@@ -5,12 +5,11 @@ from __future__ import annotations
 import typer
 
 from tictactoe.application import GameSession
-from tictactoe.errors import GameError
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
 from tictactoe.presentation import board_text, header_line, intro_line
-from tictactoe.reducer import describe_outcome
-from tictactoe.types import Outcome, cell_index
+from tictactoe.reducer import GameError, describe_outcome
+from tictactoe.types import cell_index
 
 app = typer.Typer(help="Tic-tac-toe: ports & application + Typer CLI.")
 
@@ -29,7 +28,7 @@ def play(
     typer.echo(board_text(session.state))
     while True:
         state = session.state
-        if state.outcome is not Outcome.IN_PROGRESS:
+        if session.is_over:
             msg = describe_outcome(state)
             if msg:
                 typer.echo(msg)
@@ -83,7 +82,7 @@ def play(
         typer.echo(board_text(session.state))
 
         # AI response (plays as the next player, optimally).
-        if strategy is not None and session.state.outcome is Outcome.IN_PROGRESS:
+        if strategy is not None and not session.is_over:
             ai_cell = strategy.choose_move(session.state)
             if ai_cell is not None:
                 session.place(ai_cell)

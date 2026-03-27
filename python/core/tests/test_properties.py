@@ -6,9 +6,8 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from tictactoe.errors import CellOccupiedError
 from tictactoe.minimax import best_move
-from tictactoe.reducer import PlaceMark, initial_state, reduce
+from tictactoe.reducer import CellOccupiedError, PlaceMark, initial_state, reduce
 from tictactoe.types import Outcome, Player, cell_index
 
 # Generate valid game sequences: a random-length prefix of a random permutation

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tictactoe.errors import CellOccupiedError
 from tictactoe.types import (
     Board,
     CellIndex,
@@ -14,6 +13,20 @@ from tictactoe.types import (
     WIN_LINES,
     empty_board,
 )
+
+
+class GameError(Exception):
+    """Base class for all game rule violations."""
+
+
+class CellOccupiedError(GameError):
+    """Raised when a player attempts to place on an already-occupied cell."""
+
+    def __init__(self, cell: CellIndex) -> None:
+        super().__init__(
+            f"Cell {int(cell) + 1} is already occupied. Choose an empty cell."
+        )
+        self.cell = cell
 
 
 @dataclass(frozen=True)

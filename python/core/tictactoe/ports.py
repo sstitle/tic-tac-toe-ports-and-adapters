@@ -27,6 +27,11 @@ class GameSessionPort(Protocol):
         """Current immutable snapshot (same object identity may update between moves)."""
         ...
 
+    @property
+    def is_over(self) -> bool:
+        """True when the game has reached a terminal outcome."""
+        ...
+
     def place(self, cell: CellIndex) -> None:
         """Apply a move for the current player.
 

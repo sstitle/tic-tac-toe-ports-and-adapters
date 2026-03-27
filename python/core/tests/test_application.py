@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from tictactoe.application import GameSession
-from tictactoe.errors import CellOccupiedError, GameOverError
+from tictactoe.application import GameOverError, GameSession
+from tictactoe.reducer import CellOccupiedError
 from tictactoe.types import Outcome, Player, cell_index
 
 

@@ -1,8 +1,8 @@
 """Tic-tac-toe core: domain, ports, application service, and presentation helpers."""
 
-from tictactoe.application import GameSession
-from tictactoe.errors import CellOccupiedError, GameError, GameOverError
+from tictactoe.application import GameOverError, GameSession
 from tictactoe.minimax import best_move
+from tictactoe.reducer import CellOccupiedError, GameError
 from tictactoe.ports import GameSessionPort
 from tictactoe.reducer import (
     Action,

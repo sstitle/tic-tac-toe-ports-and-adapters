@@ -1,4 +1,12 @@
-"""Minimax solver: returns the optimal move for the current player."""
+"""Minimax solver and its bundled MoveStrategyPort adapter.
+
+The solver (``_minimax``, ``best_move``) is pure domain logic: no I/O, no
+framework dependencies.  ``MinimaxStrategy`` is a thin adapter that satisfies
+``MoveStrategyPort`` using that solver.  It ships here in ``core`` because the
+algorithm has no external dependencies; adapters that want a different strategy
+(random, LLM-backed, difficulty-limited) can implement ``MoveStrategyPort``
+independently without touching this module.
+"""
 
 from __future__ import annotations
 

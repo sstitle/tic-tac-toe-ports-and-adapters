@@ -12,10 +12,10 @@ from typing import Final
 from flask import Flask, flash, g, redirect, render_template, request, session, url_for
 
 from tictactoe.application import GameSession
-from tictactoe.errors import GameError
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
 from tictactoe.presentation import empty_cell_glyph, header_line
+from tictactoe.reducer import GameError
 from tictactoe.types import Outcome, cell_index
 
 _LOCK = threading.Lock()
@@ -114,7 +114,7 @@ def create_app() -> Flask:
             flash(str(exc))
             return redirect(url_for("index"))
         # AI response after a valid human move.
-        if wg.strategy is not None and wg.session.state.outcome is Outcome.IN_PROGRESS:
+        if wg.strategy is not None and not wg.session.is_over:
             ai_cell = wg.strategy.choose_move(wg.session.state)
             if ai_cell is not None:
                 wg.session.place(ai_cell)

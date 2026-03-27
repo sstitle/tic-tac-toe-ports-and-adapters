@@ -16,11 +16,11 @@ from PySide6.QtWidgets import (
 )
 
 from tictactoe.application import GameSession
-from tictactoe.errors import GameError
 from tictactoe.minimax import MinimaxStrategy
 from tictactoe.ports import MoveStrategyPort
 from tictactoe.presentation import header_line
-from tictactoe.types import Outcome, cell_index
+from tictactoe.reducer import GameError
+from tictactoe.types import cell_index
 
 
 class BoardWidget(QWidget):
@@ -66,7 +66,7 @@ class BoardWidget(QWidget):
             QMessageBox.warning(self, "Invalid move", str(exc))
             return
         # AI response after a valid human move.
-        if self.strategy is not None and self.session.state.outcome is Outcome.IN_PROGRESS:
+        if self.strategy is not None and not self.session.is_over:
             ai_cell = self.strategy.choose_move(self.session.state)
             if ai_cell is not None:
                 self.session.place(ai_cell)
