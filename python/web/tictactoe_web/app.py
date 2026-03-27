@@ -8,7 +8,7 @@ import threading
 import time
 from typing import Final
 
-from flask import Flask, flash, redirect, render_template_string, request, session, url_for
+from flask import Flask, flash, g, redirect, render_template_string, request, session, url_for
 
 from tictactoe.application import GameSession
 from tictactoe.presentation import empty_cell_glyph, header_line
@@ -78,13 +78,16 @@ def _evict_stale(now: float) -> None:
 
 
 def _game() -> GameSession:
-    bid = _browser_id()
-    now = time.time()
-    with _LOCK:
-        _evict_stale(now)
-        entry = _GAMES.get(bid)
-        gs = entry[0] if entry is not None else GameSession()
-        _GAMES[bid] = (gs, now)
+    gs: GameSession | None = getattr(g, "_game_session", None)
+    if gs is None:
+        bid = _browser_id()
+        now = time.time()
+        with _LOCK:
+            _evict_stale(now)
+            entry = _GAMES.get(bid)
+            gs = entry[0] if entry is not None else GameSession()
+            _GAMES[bid] = (gs, now)
+        g._game_session = gs  # type: ignore[attr-defined]
     return gs
 
 

@@ -63,7 +63,14 @@ def row_col_from_cell(index: CellIndex) -> tuple[RowIndex, ColIndex]:
     return row_index(v // 3), col_index(v % 3)
 
 
-Board = NewType("Board", tuple[Player | None, ...])
+class Board(tuple):  # type: ignore[type-arg]
+    """A fixed-length tuple of exactly 9 cells (``Player | None``)."""
+
+    def __new__(cls, cells: tuple[Player | None, ...]) -> "Board":
+        if len(cells) != 9:
+            msg = f"Board must have exactly 9 cells, got {len(cells)}"
+            raise ValueError(msg)
+        return super().__new__(cls, cells)
 
 
 def empty_board() -> Board:

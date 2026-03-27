@@ -21,6 +21,7 @@ class GameState:
     current_player: Player
     outcome: Outcome
     move_count: MoveCount
+    winning_line: tuple[CellIndex, CellIndex, CellIndex] | None = None
 
 
 def initial_state() -> GameState:
@@ -54,14 +55,17 @@ def _winner_for_line(
     return None
 
 
-def _outcome_after_move(board: Board) -> Outcome:
+def _outcome_after_move(
+    board: Board,
+) -> tuple[Outcome, tuple[CellIndex, CellIndex, CellIndex] | None]:
     for a, b, c in WIN_LINES:
         w = _winner_for_line(board, a, b, c)
         if w is not None:
-            return Outcome.WIN_X if w is Player.X else Outcome.WIN_O
+            outcome = Outcome.WIN_X if w is Player.X else Outcome.WIN_O
+            return outcome, (a, b, c)
     if all(cell is not None for cell in board):
-        return Outcome.DRAW
-    return Outcome.IN_PROGRESS
+        return Outcome.DRAW, None
+    return Outcome.IN_PROGRESS, None
 
 
 def _other(p: Player) -> Player:
@@ -73,24 +77,23 @@ def reduce(state: GameState, action: Action) -> GameState:
         case ResetGame():
             return initial_state()
         case PlaceMark(cell=idx):
-            if state.outcome is not Outcome.IN_PROGRESS:
-                return state
             b = state.board
-            if b[int(idx)] is not None:
-                return state
             cells = list(b)
             p = state.current_player
             cells[int(idx)] = p
             new_board = Board(tuple(cells))
             new_moves = MoveCount(int(state.move_count) + 1)
-            oc = _outcome_after_move(new_board)
+            oc, wline = _outcome_after_move(new_board)
             next_player = _other(p) if oc is Outcome.IN_PROGRESS else p
             return GameState(
                 board=new_board,
                 current_player=next_player,
                 outcome=oc,
                 move_count=new_moves,
+                winning_line=wline,
             )
+        case _:
+            raise TypeError(f"Unknown action type: {type(action)!r}")
 
 
 def describe_outcome(state: GameState) -> str | None:
